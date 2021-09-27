@@ -85,7 +85,7 @@ public:
         logService->Start();
         auto log = logService->select("root");
         log->warn("Start afina server {}", Afina::get_version());
-
+        log->warn("Test");
         log->warn("Start storage");
         storage->Start();
 
