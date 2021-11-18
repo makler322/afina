@@ -244,7 +244,6 @@ void ServerImpl::OnRun() {
         } catch (std::runtime_error &ex) {
             _logger->error("Failed to process connection on descriptor {}: {}", client_socket, ex.what());
         }
-
         // We are done with this connection
         close(client_socket);
 

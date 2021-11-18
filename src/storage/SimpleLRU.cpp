@@ -1,5 +1,5 @@
 #include "SimpleLRU.h"
-#include "iostream"
+#include <iostream>
 namespace Afina {
 namespace Backend {
 
@@ -53,7 +53,10 @@ bool SimpleLRU::NodeUpdate(lru_node *object, const std::string &value){
     if (object -> key.size() + value.size() > _max_size){
         return false;
     }
-    _cur_size -= ((object -> value).size() + value.size());
+    if (!CheckandFreeMemory(object -> key, value)){
+        return false;
+    }
+    _cur_size = _cur_size - (object -> value).size() + value.size();
     object -> value = value;
     Move2Head(object);
     return true;
@@ -81,9 +84,7 @@ bool SimpleLRU::Put(const std::string &key, const std::string &value) {
         Put2Head(key, value);
         return true;
     }
-    Set(key, value);
-    Move2Head(&cur_node->second.get());
-    return true;
+    return NodeUpdate(&cur_node->second.get(), value);;
 }
 
 // See MapBasedGlobalLockImpl.h
@@ -101,6 +102,9 @@ bool SimpleLRU::PutIfAbsent(const std::string &key, const std::string &value) {
 
 // See MapBasedGlobalLockImpl.h
 bool SimpleLRU::Set(const std::string &key, const std::string &value) {
+    if (key.size() + value.size() > _max_size){
+        return false;
+    }
     auto cur_node = _lru_index.find(std::ref(key));
     if (cur_node == _lru_index.end()) {
         return false;
