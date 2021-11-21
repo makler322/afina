@@ -55,7 +55,7 @@ private:
         std::unique_ptr<lru_node> next;
     };
 
-    bool CheckandFreeMemory(const std::string &key, const std::string &value);
+    void AllocateMemory(const std::string &key, const std::string &value, const std::string &old_value);
     void Move2Head(lru_node *object);
     void Put2Head(const std::string &key, const std::string &value);
     void SmartMove(lru_node *object);

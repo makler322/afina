@@ -1,24 +1,26 @@
 #include "SimpleLRU.h"
 #include <iostream>
+#include <cassert>
 namespace Afina {
 namespace Backend {
 
-bool SimpleLRU::CheckandFreeMemory(const std::string &key, const std::string &value){ 
-    // If key not in map
-    if (key.size() + value.size() > _max_size){
-        return false; 
-    }
+void SimpleLRU::AllocateMemory(const std::string &key, const std::string &value, const std::string &old_value=""){ 
+    assert (key.size() + value.size() <= _max_size);
     lru_node* object = _lru_tail;
-    while (_cur_size + key.size() + value.size()  > _max_size) {
-        if (!object) {
-            object = object->prev;
-        }
+    std::size_t new_size;
+    if (old_value.size() > 0){
+        new_size = value.size() - old_value.size();
+    } else {
+        new_size = value.size() + key.size();
+    }
+    while (_cur_size + new_size > _max_size) {
         _lru_tail = object->prev;
         _lru_index.erase(object->key);
         _cur_size -= (object->key.size() + object->value.size());
-        object = object->prev;
+        object = object->prev;				
+        object->next.reset();
     }
-    return true;
+    return;
 }
   
 void SimpleLRU::Move2Head(lru_node* object) {
@@ -49,16 +51,13 @@ void SimpleLRU::Put2Head(const std::string &key, const std::string &value) {
 
 
 bool SimpleLRU::NodeUpdate(lru_node *object, const std::string &value){
-    // Move to head without allocation new memory
     if (object -> key.size() + value.size() > _max_size){
         return false;
     }
-    if (!CheckandFreeMemory(object -> key, value)){
-        return false;
-    }
+    Move2Head(object);
+    AllocateMemory(object -> key, value, object -> value);
     _cur_size = _cur_size - (object -> value).size() + value.size();
     object -> value = value;
-    Move2Head(object);
     return true;
 }
 
@@ -76,11 +75,12 @@ void SimpleLRU::NodeDelete(lru_node *object){
 
 // See MapBasedGlobalLockImpl.h
 bool SimpleLRU::Put(const std::string &key, const std::string &value) {
+    if (key.size() + value.size() > _max_size){
+        return false;
+    }
     auto cur_node = _lru_index.find(std::ref(key));
     if (cur_node == _lru_index.end()) { 
-        if (!CheckandFreeMemory(key, value)){
-            return false;
-        }
+        AllocateMemory(key, value);
         Put2Head(key, value);
         return true;
     }
@@ -89,13 +89,14 @@ bool SimpleLRU::Put(const std::string &key, const std::string &value) {
 
 // See MapBasedGlobalLockImpl.h
 bool SimpleLRU::PutIfAbsent(const std::string &key, const std::string &value) {
+    if (key.size() + value.size() > _max_size){
+        return false;
+    }
     auto cur_node = _lru_index.find(std::ref(key));
     if (cur_node != _lru_index.end()) {
         return false;
     }
-    if (!CheckandFreeMemory(key, value)){
-        return false;
-    }
+    AllocateMemory(key, value);
     Put2Head(key, value);
     return true;
 }

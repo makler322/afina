@@ -214,3 +214,22 @@ TEST(StorageTest, NewTest) {
     EXPECT_TRUE(storage.Put(key_1000, val_1000));
     EXPECT_FALSE(storage.Get(key_0, value));
 }
+
+TEST(StorageTest, NewTest2) {
+    const size_t length = 20;
+    SimpleLRU storage(2 * 1000 * length);
+
+    for (long i = 0; i < 1001; ++i) {
+        auto key = pad_space("Key " + std::to_string(i), length);
+        auto val = pad_space("Val " + std::to_string(i), length);
+        EXPECT_TRUE(storage.Put(key, val));
+    }
+    std::string value;
+    auto key_0 = pad_space("Key " + std::to_string(0), length);
+
+    auto key_1000 = pad_space("Key " + std::to_string(1000), length);
+    auto val_1000 = pad_space("Val " + std::to_string(1000), length);
+
+    EXPECT_TRUE(storage.Put(key_0, val_1000));
+    EXPECT_TRUE(storage.Get(key_1000, value));
+}
