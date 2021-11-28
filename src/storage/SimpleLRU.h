@@ -24,6 +24,17 @@ public:
     _lru_tail(nullptr)
     {}
 
+    SimpleLRU(SimpleLRU &&other) {
+       if (this == &other) {
+           return;
+       }
+       _max_size = other._max_size;
+       _cur_size = other._cur_size;
+       _lru_head = std::move(other._lru_head);
+       _lru_tail = std::move(other._lru_tail);
+       _lru_index = std::move(other._lru_index);
+   }
+   
     ~SimpleLRU() {
         _lru_index.clear(); 
         while (_lru_head.get()) {
