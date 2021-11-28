@@ -7,9 +7,13 @@ namespace Backend {
 void SimpleLRU::AllocateMemory(const std::string &key, const std::string &value, const std::string &old_value=""){ 
     assert (key.size() + value.size() <= _max_size);
     lru_node* object = _lru_tail;
-    std::size_t new_size;
+    std::size_t new_size = 0;
     if (old_value.size() > 0){
-        new_size = value.size() - old_value.size();
+        if (value.size() > old_value.size()){
+            new_size = value.size() - old_value.size();
+        } else {
+            return;
+        }
     } else {
         new_size = value.size() + key.size();
     }
